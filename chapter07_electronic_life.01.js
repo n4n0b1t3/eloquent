@@ -45,8 +45,8 @@ function BouncingCritter(){
   this.direction = getRandomElement(directionlist)
 }
 
-BouningCritter.prototype.act = function(){
-
+BouncingCritter.prototype.act = function(view){
+  //find a free space and return object with type "move" and direction
 }
 
 function Grid(width, height) {
@@ -61,12 +61,85 @@ Grid.prototype.isInside = function(vector){
 }
 
 Grid.prototype.get = function(vector){
-  this.space[this.width * vector.y + vector.x];
+  return this.space[this.width * vector.y + vector.x];
 }
 
 Grid.prototype.set = function(vector, value){
   this.space[this.width * vector.y + vector.x] = value;
 }
+
+/**
+helper, legend is a map with a char - class
+*/
+function elementFromChar(legend, ch){
+  if(ch == " ") return null;
+  let element = new legend[ch]();
+  element.originChar = ch;
+  return element;
+}
+function charFromElement(element){
+  return element ? element.originChar : " ";
+}
+
+function Wall(){
+  //does nothing yet
+}
+
+function World(plan, legend){
+  this.legend = legend;
+  this.grid = new Grid(plan[0].length, plan.length);
+  plan.forEach((line, height)=>{
+    for(let width = 0; width < line.length; width++){
+      this.grid.set(new Vector(width, height), elementFromChar(this.legend, line.charAt(width)))
+    }
+  });
+}
+
+World.prototype.toString  = function(){
+  let output = "";
+  for(let y = 0; y < this.grid.height; y++){
+    for(let x = 0; x < this.grid.width; x++){
+      let element = this.grid.get(new Vector(x, y));
+      output += charFromElement(element);
+    }
+    output += "\n"
+  }
+  return output;
+}
+
+// forEach has one advantage over map and filter directly on Grid.space, i
+// it can return vector as side effect. So it makes sense to capsule this function.
+Grid.prototype.forEach = function(f, context){
+  for(let y = 0; y < this.height; y++){
+    for(let x = 0; x < this.width; x++){
+      value = this.space[x + y * this.width];
+      if(value != null) f.call(context, value, new Vector(x,y))
+    }
+  }
+}
+
+
+// turn based game, each turn activates all active players with letAct
+World.prototype.turn = function(){
+  let acted = [];
+  this.grid.forEach(function(cell, vector){
+    if(cell.act && acted.indexOf(cell) == -1){
+      acted.push(cell);
+      this.letAct(cell, vector);
+    }
+  }, this);
+}
+
+// letAct will touch each player with a vector
+World.prototype.letAct = function(){
+  
+}
+
+
+let legend = {"#": Wall, "o": BouncingCritter};
+let myW = new World(plan, legend);
+console.log(myW.turn());
+
 
 
 /*test code*/
