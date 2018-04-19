@@ -46,6 +46,8 @@ var directions = {
   "nw": new Vector(-1, -1)
 };
 
+//console.log(directions.hasOwnProperty("sw"));
+
 function randomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
 }

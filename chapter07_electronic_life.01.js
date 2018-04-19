@@ -46,7 +46,7 @@ function Vector(x,y){
   this.y = y;
 }
 Vector.prototype.plus = function(otherVector){
-  //console.log("plus: %s %s %s %s", this.x, otherVector.x, this.y, otherVector.y);
+  console.log("plus: %s %s %s %s", this.x, otherVector.x, this.y, otherVector.y);
   return new Vector(this.x + otherVector.x, this.y + otherVector.y);
 }
 
@@ -117,25 +117,34 @@ World.prototype.turn = function(){
 World.prototype.letAct = function(critter, vector){
   /* Sets critter to destination when action is "move" */
   let action = critter.act(new View(this, vector));
-  //console.log("letAct: ", action)
+  // console.log("letAct: ", action)
+  if(action && action.type == "move"){
+    let dest = this.checkDestination(action, vector);
+    console.log("letAct: dest ", dest)
+    if(dest && this.grid.get(dest)== null){
+      this.grid.set(dest, critter);
+      this.grid.set(vector, null);
+    }
+  }
 }
-
+World.prototype.checkDestination = function(action, vector){
+  //OK; this is interesting, Haverbeke is not using a map, so he needs, hasOwnProperty and this
+  // relates to the vector in action.destination, I use Map
+  //console.log("checkDest1",directions.has(action.direction))
+  if(directions.has(action.direction)){
+    let dest = vector.plus(directions.get(action.direction));
+    //console.log("checkDest: ", dest);
+    if(this.grid.isInside(dest)) return dest
+  }
+}
 
 function BouncingCritter(){
   this.direction = getRandomElement(directionlist)
 }
-BouncingCritter.prototype.act = function(view){
-  // must set direction and return object
-  //console.log("BC.act: ", view.look(this.direction));
-  if(view.look(this.direction) != " "){
-    this.direction = view.find(" ") || "s";
-  }
-  return {type: "move", direction: this.direction}
-}
-
 BouncingCritter.prototype.act = function(view) {
-  if (view.look(this.direction) != "*")
+  if (view.look(this.direction) != " ")
     this.direction = view.find(" ") || "s";
+  //console.log("act: ", this.direction);
   return {type: "move", direction: this.direction};
 };
 
@@ -146,21 +155,24 @@ function View(world, vector){
 View.prototype.look = function(cardinalDirection){
   /* returns the character or null at destination  */
   let destination = this.vector.plus(directions.get(cardinalDirection));
-  // console.log("look 1:", destination, this.world.grid.get(destination));
+   //console.log("look 1:", destination, this.world.grid.get(destination));
   return this.world.grid.isInside(destination) ? charFromElement(this.world.grid.get(destination)) : "#";
-  // console.log("look 2: ", myReturn);
 }
 View.prototype.find = function(ch) {
   var found = this.findAll(ch);
+  //console.log("find: ", found)
   if (found.length == 0) return null;
-  return randomElement(found);
+  return getRandomElement(found);
 }
 View.prototype.findAll = function(char){
   let found = []
   // take the current vector circle through directions and use this.vector.plus(vector from directions) to find char
   directions.forEach((value, key)=>{
     //console.log("findAll", charFromElement(this.world.grid.get(this.vector.plus(value))));
-    found.push(charFromElement(this.world.grid.get(this.vector.plus(value))));
+    //charFromElement(this.world.grid.get(this.vector.plus(value))
+    let foundChar = this.look(key);
+    //console.log(foundChar);
+    if(foundChar == char) found.push(value);
   });
   return found
 }
@@ -169,7 +181,11 @@ View.prototype.findAll = function(char){
 
 let legend = {"#": Wall, "o": BouncingCritter};
 let myW = new World(plan, legend);
-console.log(myW.turn());
+for(let i=0;i<3;i++){
+  console.log(i)
+  myW.turn();
+  myW.toString();
+}
 
 
 
