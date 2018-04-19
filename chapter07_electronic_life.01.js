@@ -117,7 +117,7 @@ World.prototype.turn = function(){
 World.prototype.letAct = function(critter, vector){
   /* Sets critter to destination when action is "move" */
   let action = critter.act(new View(this, vector));
-  console.log("letAct: ", action)
+  //console.log("letAct: ", action)
 }
 
 
@@ -134,7 +134,7 @@ BouncingCritter.prototype.act = function(view){
 }
 
 BouncingCritter.prototype.act = function(view) {
-  if (view.look(this.direction) != " ")
+  if (view.look(this.direction) != "*")
     this.direction = view.find(" ") || "s";
   return {type: "move", direction: this.direction};
 };
@@ -149,6 +149,20 @@ View.prototype.look = function(cardinalDirection){
   // console.log("look 1:", destination, this.world.grid.get(destination));
   return this.world.grid.isInside(destination) ? charFromElement(this.world.grid.get(destination)) : "#";
   // console.log("look 2: ", myReturn);
+}
+View.prototype.find = function(ch) {
+  var found = this.findAll(ch);
+  if (found.length == 0) return null;
+  return randomElement(found);
+}
+View.prototype.findAll = function(char){
+  let found = []
+  // take the current vector circle through directions and use this.vector.plus(vector from directions) to find char
+  directions.forEach((value, key)=>{
+    //console.log("findAll", charFromElement(this.world.grid.get(this.vector.plus(value))));
+    found.push(charFromElement(this.world.grid.get(this.vector.plus(value))));
+  });
+  return found
 }
 
 
