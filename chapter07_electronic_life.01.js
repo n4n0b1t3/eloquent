@@ -1,13 +1,15 @@
+'use strict';
+
 var plan = ["############################",
-            "#      #    #      o      ##",
+            "#o     #    #             ##",
             "#                          #",
             "#          #####           #",
             "##         #   #    ##     #",
             "###           ##     #     #",
             "#           ###      #     #",
             "#   ####                   #",
-            "#   ##       o             #",
-            "# o  #         o       ### #",
+            "#   ##                     #",
+            "#    #                 ### #",
             "#    #                     #",
             "############################"];
 
@@ -45,8 +47,8 @@ function Vector(x,y){
   this.x = x;
   this.y = y;
 }
+let pluscnt = 0;
 Vector.prototype.plus = function(otherVector){
-  console.log("plus: %s %s %s %s", this.x, otherVector.x, this.y, otherVector.y);
   return new Vector(this.x + otherVector.x, this.y + otherVector.y);
 }
 
@@ -71,7 +73,7 @@ Grid.prototype.set = function(vector, value){
 Grid.prototype.forEach = function(f, context){
   for(let y = 0; y < this.height; y++){
     for(let x = 0; x < this.width; x++){
-      value = this.space[x + y * this.width];
+      let value = this.space[x + y * this.width];
       if(value != null) f.call(context, value, new Vector(x,y))
     }
   }
@@ -119,9 +121,10 @@ World.prototype.letAct = function(critter, vector){
   let action = critter.act(new View(this, vector));
   // console.log("letAct: ", action)
   if(action && action.type == "move"){
+    //dest will be undefined when
     let dest = this.checkDestination(action, vector);
-    console.log("letAct: dest ", dest)
     if(dest && this.grid.get(dest)== null){
+      debugger;
       this.grid.set(dest, critter);
       this.grid.set(vector, null);
     }
@@ -130,10 +133,8 @@ World.prototype.letAct = function(critter, vector){
 World.prototype.checkDestination = function(action, vector){
   //OK; this is interesting, Haverbeke is not using a map, so he needs, hasOwnProperty and this
   // relates to the vector in action.destination, I use Map
-  //console.log("checkDest1",directions.has(action.direction))
   if(directions.has(action.direction)){
     let dest = vector.plus(directions.get(action.direction));
-    //console.log("checkDest: ", dest);
     if(this.grid.isInside(dest)) return dest
   }
 }
@@ -141,10 +142,11 @@ World.prototype.checkDestination = function(action, vector){
 function BouncingCritter(){
   this.direction = getRandomElement(directionlist)
 }
+
 BouncingCritter.prototype.act = function(view) {
-  if (view.look(this.direction) != " ")
+  if (view.look(this.direction) != " "){
     this.direction = view.find(" ") || "s";
-  //console.log("act: ", this.direction);
+  }
   return {type: "move", direction: this.direction};
 };
 
@@ -152,15 +154,14 @@ function View(world, vector){
   this.world = world;
   this.vector = vector;
 }
+
 View.prototype.look = function(cardinalDirection){
-  /* returns the character or null at destination  */
+  //cardinalDirection="bad"
   let destination = this.vector.plus(directions.get(cardinalDirection));
-   //console.log("look 1:", destination, this.world.grid.get(destination));
   return this.world.grid.isInside(destination) ? charFromElement(this.world.grid.get(destination)) : "#";
 }
 View.prototype.find = function(ch) {
   var found = this.findAll(ch);
-  //console.log("find: ", found)
   if (found.length == 0) return null;
   return getRandomElement(found);
 }
@@ -168,11 +169,9 @@ View.prototype.findAll = function(char){
   let found = []
   // take the current vector circle through directions and use this.vector.plus(vector from directions) to find char
   directions.forEach((value, key)=>{
-    //console.log("findAll", charFromElement(this.world.grid.get(this.vector.plus(value))));
     //charFromElement(this.world.grid.get(this.vector.plus(value))
     let foundChar = this.look(key);
-    //console.log(foundChar);
-    if(foundChar == char) found.push(value);
+    if(foundChar == char) found.push(key);
   });
   return found
 }
@@ -182,9 +181,9 @@ View.prototype.findAll = function(char){
 let legend = {"#": Wall, "o": BouncingCritter};
 let myW = new World(plan, legend);
 for(let i=0;i<3;i++){
-  console.log(i)
+  console.log("%s. turn",i)
   myW.turn();
-  myW.toString();
+  console.log(myW.toString());
 }
 
 
